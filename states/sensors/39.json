@@ -1,0 +1,17 @@
+{
+ "state": {
+  "status": 1,
+  "lastupdated": "2021-03-11T13:50:40"
+ },
+ "config": {
+  "on": true,
+  "reachable": true
+ },
+ "name": "cycling",
+ "type": "CLIPGenericStatus",
+ "modelid": "HUELABSENUM",
+ "manufacturername": "Philips",
+ "swversion": "1.0",
+ "uniqueid": "2:0:e460-803f-40e8-8587",
+ "recycle": true
+}

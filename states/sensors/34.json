@@ -1,0 +1,17 @@
+{
+ "state": {
+  "status": 1,
+  "lastupdated": "2021-03-11T15:12:37"
+ },
+ "config": {
+  "on": true,
+  "reachable": true
+ },
+ "name": "cycleState",
+ "type": "CLIPGenericStatus",
+ "modelid": "HUELABSENUM",
+ "manufacturername": "Philips",
+ "swversion": "1.0",
+ "uniqueid": "0:1:4758-4cd1-431d-95bc",
+ "recycle": true
+}

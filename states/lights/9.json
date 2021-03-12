@@ -1,0 +1,70 @@
+{
+ "state": {
+  "on": true,
+  "bri": 254,
+  "hue": 8401,
+  "sat": 140,
+  "effect": "none",
+  "xy": [
+   0.4575,
+   0.4099
+  ],
+  "ct": 366,
+  "alert": "select",
+  "colormode": "xy",
+  "mode": "homeautomation",
+  "reachable": true
+ },
+ "swupdate": {
+  "state": "noupdates",
+  "lastinstall": "2021-01-27T22:51:21"
+ },
+ "type": "Extended color light",
+ "name": "Stove 2",
+ "modelid": "LCA003",
+ "manufacturername": "Signify Netherlands B.V.",
+ "productname": "Hue color Lamp",
+ "capabilities": {
+  "certified": true,
+  "control": {
+   "mindimlevel": 200,
+   "maxlumen": 800,
+   "colorgamuttype": "C",
+   "colorgamut": [
+    [
+     0.6915,
+     0.3083
+    ],
+    [
+     0.17,
+     0.7
+    ],
+    [
+     0.1532,
+     0.0475
+    ]
+   ],
+   "ct": {
+    "min": 153,
+    "max": 500
+   }
+  },
+  "streaming": {
+   "renderer": true,
+   "proxy": true
+  }
+ },
+ "config": {
+  "archetype": "sultanbulb",
+  "function": "mixed",
+  "direction": "omnidirectional",
+  "startup": {
+   "mode": "safety",
+   "configured": true
+  }
+ },
+ "uniqueid": "00:17:88:01:09:4e:f4:03-0b",
+ "swversion": "1.76.6",
+ "swconfigid": "598716A0",
+ "productid": "Philips-LCA003-1-A19ECLv6"
+}

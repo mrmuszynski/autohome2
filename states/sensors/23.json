@@ -1,0 +1,53 @@
+{
+ "state": {
+  "buttonevent": 1002,
+  "lastupdated": "2021-03-10T06:43:13"
+ },
+ "swupdate": {
+  "state": "noupdates",
+  "lastinstall": "2020-11-15T22:43:27"
+ },
+ "config": {
+  "on": true,
+  "battery": 100,
+  "reachable": true,
+  "pending": []
+ },
+ "name": "Hue Smart button 1",
+ "type": "ZLLSwitch",
+ "modelid": "ROM001",
+ "manufacturername": "Signify Netherlands B.V.",
+ "productname": "Hue Smart button",
+ "diversityid": "8b18a40c-eb6a-40d7-a0af-eb0906613d41",
+ "swversion": "2.30.0_r30777",
+ "uniqueid": "00:17:88:01:06:05:9b:3e-01-fc00",
+ "capabilities": {
+  "certified": true,
+  "primary": true,
+  "inputs": [
+   {
+    "repeatintervals": [
+     800
+    ],
+    "events": [
+     {
+      "buttonevent": 1000,
+      "eventtype": "initial_press"
+     },
+     {
+      "buttonevent": 1001,
+      "eventtype": "repeat"
+     },
+     {
+      "buttonevent": 1002,
+      "eventtype": "short_release"
+     },
+     {
+      "buttonevent": 1003,
+      "eventtype": "long_release"
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "state": {
+  "flag": false,
+  "lastupdated": "2020-11-15T03:51:55"
+ },
+ "config": {
+  "on": true,
+  "reachable": true
+ },
+ "name": "Routine 1",
+ "type": "CLIPGenericFlag",
+ "modelid": "PHA_CTRL_START",
+ "manufacturername": "Philips",
+ "swversion": "1.0",
+ "uniqueid": "3cTXOH5XKwel",
+ "recycle": true
+}

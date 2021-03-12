@@ -1,0 +1,17 @@
+{
+ "state": {
+  "flag": false,
+  "lastupdated": "2021-03-11T14:45:00"
+ },
+ "config": {
+  "on": true,
+  "reachable": true
+ },
+ "name": "Wake up 1",
+ "type": "CLIPGenericFlag",
+ "modelid": "WAKEUP",
+ "manufacturername": "Philips",
+ "swversion": "1.0",
+ "uniqueid": "L_04_l0BW1",
+ "recycle": true
+}
