@@ -1,4 +1,13 @@
-import infrastructure, pdb
+import infrastructure, pdb, os
+
+try:
+	os.mkdir('payloads')
+except:
+	pass
+try:
+	os.mkdir('buttons')
+except:
+	pass
 
 ########################################################################
 #
@@ -41,7 +50,7 @@ amp_and_garland = infrastructure.kasa_strip_outlet(poang_strip, 2)
 grow_house_strip = infrastructure.kasa_strip("192.168.0.188", "Grow House")
 grow_0 = infrastructure.kasa_strip_outlet(grow_house_strip, 0)
 grow_1 = infrastructure.kasa_strip_outlet(grow_house_strip, 1)
-pdb.set_trace()
+
 #single plug not implemented, but its IP is 192.168.0.192
 
 
