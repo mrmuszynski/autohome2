@@ -32,7 +32,12 @@ class house:
 	def read_sensors(self):
 		button_payload_paths = glob(self.config['button_payload_path']+'*')
 		for button_payload_path in button_payload_paths:
-			payload_dict = json.load(open(button_payload_path))
+			while 1:
+				try:
+					payload_dict = json.load(open(button_payload_path))
+					break
+				except:
+					pass
 			self.hue_sensors[payload_dict['button_id']].process_payload(payload_dict, button_payload_path)
 
 	def read_payloads(self):
