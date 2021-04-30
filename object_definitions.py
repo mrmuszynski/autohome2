@@ -5,7 +5,7 @@ try:
 except:
 	pass
 try:
-	os.mkdir('buttons')
+	os.mkdir('payloads/buttons')
 except:
 	pass
 
