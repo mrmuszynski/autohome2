@@ -2,33 +2,32 @@ import pdb
 import json
 from requests import get, put, post, Session, adapters
 from time import sleep
-from datetime import datetime
+from datetime import datetime, timedelta
 from glob import glob
 from os import remove
+import asyncio
+import kasa
 
 def get_unix_time():
 	return (datetime.now() - datetime.fromtimestamp(0)).total_seconds()
 
-class house():
+class house:
 	def __init__(self):
-		self.name = None
+		self.name = "NONE"
 		self.config = json.load(open("config.json"))
-		self.hue_light_states = None
-		self.hue_sensor_states = None
-		self.hue_lights = {}
 		self.hue_sensors = {}
+		self.hue_lights = {}
+		self.groups = {}
 		self.session = Session()
 		self.adapter = adapters.HTTPAdapter(
 		    pool_connections=100,
 		    pool_maxsize=100)
 		self.session.mount('http://', self.adapter)
+		self.schedule = []
 
-
-	def update_state(self):
-		for x in self.hue_lights:
-			self.hue_lights[x].update_state()
+	def read_button_events(self):
 		for x in self.hue_sensors:
-			self.hue_sensors[x].update_state()
+			self.hue_sensors[x].read_button_events()
 
 	def read_sensors(self):
 		button_payload_paths = glob(self.config['button_payload_path']+'*')
@@ -39,81 +38,72 @@ class house():
 	def read_payloads(self):
 		self.read_sensors()
 
+	def schedule_event(self, time, action):
+		YDOY = datetime.strftime(datetime.now(),"%Y-%jT")
+		YDOY_time = YDOY + time
+		YDOY_datetime = datetime.strptime(YDOY_time, "%Y-%jT%H:%M:%S")
+		time_is_in_past = (YDOY_datetime - datetime.now()).total_seconds() < 0
+		if time_is_in_past:
+			YDOY_datetime += timedelta(days=1)
+		self.schedule.append([YDOY_datetime, action])
+		self.schedule = sorted(self.schedule, key=lambda x: x[0])
+
+	def run_events(self):
+		while 1:
+			now = datetime.now()
+			for scheduled_event in self.schedule:
+				execute_event = (scheduled_event[0] - datetime.now()).total_seconds() < 0
+				if execute_event:
+					scheduled_event[1]()
+					scheduled_event[0] += timedelta(days=1)
+					self.schedule = sorted(self.schedule, key=lambda x: x[0])
+					print('execute event')
+				else:
+					break
+
+class kasa_strip:
+	def __init__(self, ip, name):
+		self.ip = ip
+		self.name = name
+		self.strip = kasa.SmartStrip(ip)
+		asyncio.run(self.strip.update())
+
+class kasa_strip_outlet:
+	def __init__(self, parent_strip, id_within_strip):
+		self.parent_strip = parent_strip
+		self.id_within_strip = id_within_strip
+
+	def turn_on(self):
+		asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_on())
+		return 1
+
+	def turn_off(self):
+		asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_off())
+		return 1
+
 class hue_light():
-	def __init__(self, parent, hue_id):
+	def __init__(self, parent, hue_id, name):
+		self.name = name
 		self.hue_id = str(hue_id)
 		parent.hue_lights[self.hue_id] = self
 		self.parent = parent
 		self.hue_state_file_path = self.parent.config['hue_light_states_path'] + self.hue_id + '.json'
 		self.hue_state = None
 
-	def update_state(self):
-		while 1:
-			try:
-				self.hue_state = json.load(open(self.hue_state_file_path))
-				break
-			except ValueError:
-				pass
-
 class hue_switch():
-	def __init__(self, parent, hue_id):
+	def __init__(self, parent, hue_id, group):
 		self.hue_id = str(hue_id)
+		self.group = group
 		parent.hue_sensors[self.hue_id] = self
 		self.parent = parent
 		self.hue_state_file_path = self.parent.config['hue_sensor_states_path'] + self.hue_id + '.json'
 		self.hue_state = None
-		self.state = 'NONE'
 		self.last_buttonevent = None
 		self.last_lastupdated = None
 		self.this_buttonevent = None
 		self.url = parent.config['hue_api_base_url'] + 'sensors/' + self.hue_id + '/'
 		self.button_off_payload = json.dumps({"config":{"on":False}})
 		self.button_on_payload = json.dumps({"config":{"on":True}})
-		self.actions = {
-			'ON': {
-				'on.short': self.do_nothing,
-				'on.hold': self.do_nothing,
-				'on.release': self.do_nothing,
-				'up.short': self.turn_up,
-				'up.hold': self.do_nothing,
-				'up.release': self.turn_up,
-				'down.short': self.turn_down,
-				'down.hold': self.do_nothing,
-				'down.release': self.turn_down,
-				'off.short': self.turn_off,
-				'off.hold': self.turn_off,
-				'off.release': self.turn_off
-			},
-			'OFF': {
-				'on.short': self.turn_on,
-				'on.hold': self.turn_on,
-				'on.release': self.turn_on,
-				'up.short': self.do_nothing,
-				'up.hold': self.do_nothing,
-				'up.release': self.do_nothing,
-				'down.short': self.do_nothing,
-				'down.hold': self.do_nothing,
-				'down.release': self.do_nothing,
-				'off.short': self.do_nothing,
-				'off.hold': self.do_nothing,
-				'off.release': self.do_nothing
-			},
-			'NONE': {
-				'on.short': self.turn_on,
-				'on.hold': self.turn_on,
-				'on.release': self.turn_on,
-				'up.short': self.turn_up,
-				'up.hold': self.do_nothing,
-				'up.release': self.turn_up,
-				'down.short': self.turn_down,
-				'down.hold': self.do_nothing,
-				'down.release': self.turn_down,
-				'off.short': self.turn_off,
-				'off.hold': self.turn_off,
-				'off.release': self.turn_off
-			},
-
-		}
 
 
 
@@ -178,7 +168,7 @@ class hue_switch():
 		else:
 			print('Error! Unrecognized input!')
 
-	def update_state(self):
+	def read_button_events(self):
 		while 1:
 			try:
 				self.hue_state = json.load(open(self.hue_state_file_path))
@@ -207,34 +197,99 @@ class hue_switch():
 			self.last_buttonevent = self.hue_state['buttonevent']
 			self.last_lastupdated = self.hue_state['lastupdated']
 
+
+	def process_payload(self, payload_dict, button_payload_path):
+		print(payload_dict)
+		if self.group.actions[self.group.state][payload_dict['button'] + '.' + payload_dict['action']]():
+			remove(button_payload_path)
+		else:
+			print('Oh fuck, your payload action failed!')
+
+
+
+class group:
+	def __init__(self, hue_lights, name):
+		self.hue_lights = hue_lights
+		self.name = name
+		self.state = "NONE"
+		self.actions = {
+			'ON': {
+				'on.short': self.do_nothing,
+				'on.hold': self.do_nothing,
+				'on.release': self.do_nothing,
+				'up.short': self.turn_up,
+				'up.hold': self.do_nothing,
+				'up.release': self.turn_up,
+				'down.short': self.turn_down,
+				'down.hold': self.do_nothing,
+				'down.release': self.turn_down,
+				'off.short': self.turn_off,
+				'off.hold': self.turn_off,
+				'off.release': self.turn_off
+			},
+			'OFF': {
+				'on.short': self.turn_on,
+				'on.hold': self.turn_on,
+				'on.release': self.turn_on,
+				'up.short': self.do_nothing,
+				'up.hold': self.do_nothing,
+				'up.release': self.do_nothing,
+				'down.short': self.do_nothing,
+				'down.hold': self.do_nothing,
+				'down.release': self.do_nothing,
+				'off.short': self.do_nothing,
+				'off.hold': self.do_nothing,
+				'off.release': self.do_nothing
+			},
+			'NONE': {
+				'on.short': self.turn_on,
+				'on.hold': self.turn_on,
+				'on.release': self.turn_on,
+				'up.short': self.turn_up,
+				'up.hold': self.do_nothing,
+				'up.release': self.turn_up,
+				'down.short': self.turn_down,
+				'down.hold': self.do_nothing,
+				'down.release': self.turn_down,
+				'off.short': self.turn_off,
+				'off.hold': self.turn_off,
+				'off.release': self.turn_off
+			},
+
+		}
 	def do_nothing(self):
-		print('Taking no action with lights assosciated with hue_id ' + self.hue_id)
+		print('Taking no action with lights assosciated with group ' + self.name + ': ')
+		for hue_light in self.hue_lights: print(hue_light.name)
 		print('State was ' + self.state)
 		print('State is ' + self.state)
 		return 1
 
 	def turn_on(self):
-		print('Turning on lights assosciated with hue_id ' + self.hue_id)
+		print('Turning on lights assosciated with group ' + self.name + ': ')
+		for hue_light in self.hue_lights: print(hue_light.name)
 		print('State was ' + self.state)
 		self.state = 'ON'
 		print('State is ' + self.state)
 		return 1
 
 	def turn_off(self):
-		print('Turning off lights assosciated with hue_id ' + self.hue_id)
+		print('Turning off lights assosciated with group ' + self.name + ': ')
+		for hue_light in self.hue_lights: print(hue_light.name)
 		print('State was ' + self.state)
 		self.state = 'OFF'
 		print('State is ' + self.state)
 		return 1
 
 	def turn_up(self):
-		print('Turning up lights assosciated with hue_id ' + self.hue_id)
+		print('Turning up lights assosciated with group ' + self.name + ': ')
+		for hue_light in self.hue_lights: print(hue_light.name)
 		print('State was ' + self.state)
 		print('State is ' + self.state)
 		return 1
 
 	def turn_down(self):
-		print('Turning down lights assosciated with hue_id ' + self.hue_id)
+		print('Turning down lights assosciated with group ' + self.name + ': ')
+		for hue_light in self.hue_lights: print(hue_light.name)
 		print('State was ' + self.state)
 		print('State is ' + self.state)
 		return 1
@@ -246,8 +301,6 @@ class hue_switch():
 			remove(button_payload_path)
 		else:
 			print('Oh fuck, your payload action failed!')
-
-
 
 #stuff to do
 	#default state per tod

@@ -1,3 +1,3 @@
 from object_definitions import house
 
-house.run_events()
+while 1: house.read_button_events()
