@@ -60,7 +60,7 @@ grow_1 = infrastructure.kasa_strip_outlet(grow_house_strip, 1)
 #
 #########################################################################
 fireplace = infrastructure.group([fireplace_left, fireplace_right], [[0,1]], "Fireplace")
-stove = infrastructure.group([kitchen_cabinets_left, kitchen_cabinets_right, stove_1, stove_2], [[2,3],[1,2,3,4],[]], "Stove")
+stove = infrastructure.group([kitchen_cabinets_left, kitchen_cabinets_right, stove_1, stove_2], [[2,3],[0,1,2,3],[]], "Stove")
 
 #########################################################################
 #
