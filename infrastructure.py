@@ -108,7 +108,27 @@ class hue_light():
 	def turn_off(self):
 		print("Turning off " + self.name)
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
-		payload = {"on": False}
+		payload = {"bri_inc": False}
+		# if hue is not None: payload['hue'] = hue
+		# if bri is not None: payload['bri'] = bri
+		# if sat is not None: payload['sat'] = sat
+		put(url, data = json.dumps(payload))
+		return 1
+
+	def turn_up(self):
+		print("Turning up " + self.name)
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		payload = {"bri_inc": 10}
+		# if hue is not None: payload['hue'] = hue
+		# if bri is not None: payload['bri'] = bri
+		# if sat is not None: payload['sat'] = sat
+		put(url, data = json.dumps(payload))
+		return 1
+
+	def turn_down(self):
+		print("Turning down " + self.name)
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		payload = {"bri_inc": -10}
 		# if hue is not None: payload['hue'] = hue
 		# if bri is not None: payload['bri'] = bri
 		# if sat is not None: payload['sat'] = sat
@@ -321,14 +341,18 @@ class group:
 
 	def turn_up(self):
 		print('Turning up lights assosciated with group ' + self.name + ': ')
-		for hue_light in self.hue_lights: print(hue_light.name)
+		for hue_light in self.hue_lights: 
+			print(hue_light.name)
+			hue_light.turn_up()
 		# print('State was ' + self.state)
 		# print('State is ' + self.state)
 		return 1
 
 	def turn_down(self):
 		print('Turning down lights assosciated with group ' + self.name + ': ')
-		for hue_light in self.hue_lights: print(hue_light.name)
+		for hue_light in self.hue_lights: 
+			print(hue_light.name)
+			hue_light.turn_down()
 		# print('State was ' + self.state)
 		# print('State is ' + self.state)
 		return 1
