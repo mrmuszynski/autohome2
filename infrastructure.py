@@ -118,7 +118,7 @@ class hue_light():
 	def turn_up(self):
 		print("Turning up " + self.name)
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
-		payload = {"bri_inc": 10}
+		payload = {"bri_inc": 25}
 		# if hue is not None: payload['hue'] = hue
 		# if bri is not None: payload['bri'] = bri
 		# if sat is not None: payload['sat'] = sat
@@ -128,7 +128,7 @@ class hue_light():
 	def turn_down(self):
 		print("Turning down " + self.name)
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
-		payload = {"bri_inc": -10}
+		payload = {"bri_inc": -25}
 		# if hue is not None: payload['hue'] = hue
 		# if bri is not None: payload['bri'] = bri
 		# if sat is not None: payload['sat'] = sat
