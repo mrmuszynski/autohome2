@@ -58,15 +58,17 @@ grow_1 = infrastructure.kasa_strip_outlet(grow_house_strip, 1)
 #
 #	init groups
 #
-########################################################################
-fireplace = infrastructure.group([fireplace_left, fireplace_right], "Fireplace")
+#########################################################################
+fireplace = infrastructure.group([fireplace_left, fireplace_right], [[0,1]], "Fireplace")
+stove = infrastructure.group([kitchen_cabinets_left, kitchen_cabinets_right, stove_1, stove_2], [[2,3],[1,2,3,4],[]], "Stove")
 
 #########################################################################
 #
 #	init Hue switches and dimmers
 #
-########################################################################
+#########################################################################
 fireplace_dimmer = infrastructure.hue_switch(house,32, fireplace)
+stove_button = infrastructure.hue_switch(house,6, stove)
 # bathroom_dimmer = infrastructure.hue_switch(house,35, None)
 # dining_room_dimmer = infrastructure.hue_switch(house,38, None)
 # kitchen_button = infrastructure.hue_switch(house,6, None)
@@ -77,11 +79,11 @@ fireplace_dimmer = infrastructure.hue_switch(house,32, fireplace)
 #
 #	Schedule Actions
 #
-########################################################################
+#########################################################################
 house.schedule_event("16:00:00",computer.turn_on)
 # house.schedule_event("15:41:00",nothing.turn_on)
-house.schedule_event("15:42:00",nothing.turn_off)
-house.schedule_event("15:42:01",nothing.turn_on)
-house.schedule_event("15:42:02",nothing.turn_off)
-house.schedule_event("15:42:03",nothing.turn_on)
-
+house.schedule_event("06:00:00",grow_0.turn_on)
+house.schedule_event("06:00:00",grow_1.turn_on)
+house.schedule_event("20:00:00",grow_0.turn_off)
+house.schedule_event("20:00:00",grow_1.turn_off)
+house.schedule_event("18:00:00",tv_lamp.turn_off)

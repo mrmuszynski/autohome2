@@ -95,6 +95,26 @@ class hue_light():
 		self.hue_state_file_path = self.parent.config['hue_light_states_path'] + self.hue_id + '.json'
 		self.hue_state = None
 
+	def turn_on(self):
+		print("Turning on " + self.name)
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		payload = {"on": True}
+		# if hue is not None: payload['hue'] = hue
+		# if bri is not None: payload['bri'] = bri
+		# if sat is not None: payload['sat'] = sat
+		put(url, data = json.dumps(payload))
+		return 1
+
+	def turn_off(self):
+		print("Turning off " + self.name)
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		payload = {"on": False}
+		# if hue is not None: payload['hue'] = hue
+		# if bri is not None: payload['bri'] = bri
+		# if sat is not None: payload['sat'] = sat
+		put(url, data = json.dumps(payload))
+		return 1
+
 class hue_switch():
 	def __init__(self, parent, hue_id, group):
 		self.hue_id = str(hue_id)
@@ -213,10 +233,12 @@ class hue_switch():
 
 
 class group:
-	def __init__(self, hue_lights, name):
+	def __init__(self, hue_lights, subgroups, name):
 		self.hue_lights = hue_lights
+		self.subgroups = subgroups
 		self.name = name
 		self.state = "NONE"
+		self.next_subgroup = 0
 		self.actions = {
 			'ON': {
 				'on.short': self.do_nothing,
@@ -265,47 +287,51 @@ class group:
 	def do_nothing(self):
 		print('Taking no action with lights assosciated with group ' + self.name + ': ')
 		for hue_light in self.hue_lights: print(hue_light.name)
-		print('State was ' + self.state)
-		print('State is ' + self.state)
+		# print('State was ' + self.state)
+		# print('State is ' + self.state)
 		return 1
 
 	def turn_on(self):
 		print('Turning on lights assosciated with group ' + self.name + ': ')
-		for hue_light in self.hue_lights: print(hue_light.name)
-		print('State was ' + self.state)
-		self.state = 'ON'
-		print('State is ' + self.state)
+		for light_id in range(len(self.hue_lights)):
+			if light_id in self.subgroups[self.next_subgroup]:
+				print(self.hue_lights[light_id].name)
+				self.hue_lights[light_id].turn_on()
+			else:
+				print(self.hue_lights[light_id].name)
+				self.hue_lights[light_id].turn_off()
+
+		self.next_subgroup += 1
+		self.next_subgroup = self.next_subgroup%len(self.subgroups)
+
+		# print('State was ' + self.state)
+		# self.state = 'ON'
+		# print('State is ' + self.state)
 		return 1
 
 	def turn_off(self):
 		print('Turning off lights assosciated with group ' + self.name + ': ')
-		for hue_light in self.hue_lights: print(hue_light.name)
-		print('State was ' + self.state)
-		self.state = 'OFF'
-		print('State is ' + self.state)
+		for hue_light in self.hue_lights: 
+			print(hue_light.name)
+			hue_light.turn_off()
+		# print('State was ' + self.state)
+		# self.state = 'OFF'
+		# print('State is ' + self.state)
 		return 1
 
 	def turn_up(self):
 		print('Turning up lights assosciated with group ' + self.name + ': ')
 		for hue_light in self.hue_lights: print(hue_light.name)
-		print('State was ' + self.state)
-		print('State is ' + self.state)
+		# print('State was ' + self.state)
+		# print('State is ' + self.state)
 		return 1
 
 	def turn_down(self):
 		print('Turning down lights assosciated with group ' + self.name + ': ')
 		for hue_light in self.hue_lights: print(hue_light.name)
-		print('State was ' + self.state)
-		print('State is ' + self.state)
+		# print('State was ' + self.state)
+		# print('State is ' + self.state)
 		return 1
-
-	def process_payload(self, payload_dict, button_payload_path):
-		print(self.state)
-		print(payload_dict)
-		if self.actions[self.state][payload_dict['button'] + '.' + payload_dict['action']]():
-			remove(button_payload_path)
-		else:
-			print('Oh fuck, your payload action failed!')
 
 #stuff to do
 	#default state per tod
