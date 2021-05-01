@@ -108,7 +108,7 @@ class hue_light():
 	def turn_off(self):
 		print("Turning off " + self.name)
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
-		payload = {"bri_inc": False}
+		payload = {"on": False}
 		# if hue is not None: payload['hue'] = hue
 		# if bri is not None: payload['bri'] = bri
 		# if sat is not None: payload['sat'] = sat
