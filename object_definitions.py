@@ -42,10 +42,10 @@ bedroom_ceiling_2 = infrastructure.hue_light(house,15, 'Dining Room Ceiling 2')
 #	init Kasa strips and plugs
 #
 ########################################################################
-poang_strip = infrastructure.kasa_strip("192.168.0.106", "Poang Corner")
-computer = infrastructure.kasa_strip_outlet(poang_strip, 0)
-nothing = infrastructure.kasa_strip_outlet(poang_strip, 1)
-amp_and_garland = infrastructure.kasa_strip_outlet(poang_strip, 2)
+# poang_strip = infrastructure.kasa_strip("192.168.0.106", "Poang Corner")
+# computer = infrastructure.kasa_strip_outlet(poang_strip, 0)
+# nothing = infrastructure.kasa_strip_outlet(poang_strip, 1)
+# amp_and_garland = infrastructure.kasa_strip_outlet(poang_strip, 2)
 
 grow_house_strip = infrastructure.kasa_strip("192.168.0.188", "Grow House")
 grow_0 = infrastructure.kasa_strip_outlet(grow_house_strip, 0)
@@ -80,10 +80,8 @@ stove_button = infrastructure.hue_switch(house,6, stove)
 #	Schedule Actions
 #
 #########################################################################
-house.schedule_event("16:00:00",computer.turn_on)
-# house.schedule_event("15:41:00",nothing.turn_on)
-house.schedule_event("06:00:00",grow_0.turn_on)
-house.schedule_event("06:00:00",grow_1.turn_on)
-house.schedule_event("20:00:00",grow_0.turn_off)
-house.schedule_event("20:00:00",grow_1.turn_off)
-house.schedule_event("18:00:00",tv_lamp.turn_off)
+# house.schedule_event("06:00:00",grow_0.turn_on)
+# house.schedule_event("06:00:00",grow_1.turn_on)
+# house.schedule_event("20:00:00",grow_0.turn_off)
+# house.schedule_event("20:00:00",grow_1.turn_off)
+# house.schedule_event("18:00:00",tv_lamp.turn_off)
