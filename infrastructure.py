@@ -120,7 +120,7 @@ class hue_light():
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
 		payload = {
 			"bri_inc": 25,
-			"transitiontime": 10,
+			"transitiontime": 20,
 			}
 		# if hue is not None: payload['hue'] = hue
 		# if bri is not None: payload['bri'] = bri
@@ -133,7 +133,7 @@ class hue_light():
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
 		payload = {
 			"bri_inc": -25,
-			"transitiontime": 10,
+			"transitiontime": 20,
 			}
 		# if hue is not None: payload['hue'] = hue
 		# if bri is not None: payload['bri'] = bri
