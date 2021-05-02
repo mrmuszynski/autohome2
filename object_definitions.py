@@ -80,6 +80,13 @@ stove_button = infrastructure.hue_switch(house,6, stove)
 #	Schedule Actions
 #
 #########################################################################
+house.schedule_event("11:01:00",grow_0.turn_on)
+house.schedule_event("11:01:00",grow_1.turn_on)
+house.schedule_event("11:00:00",grow_0.turn_off)
+house.schedule_event("11:00:00",grow_1.turn_off)
+house.schedule_event("10:51:00",fireplace.turn_off)
+house.schedule_event("10:50:00",fireplace.turn_on)
+
 # house.schedule_event("06:00:00",grow_0.turn_on)
 # house.schedule_event("06:00:00",grow_1.turn_on)
 # house.schedule_event("20:00:00",grow_0.turn_off)
