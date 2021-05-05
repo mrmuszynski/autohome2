@@ -91,6 +91,7 @@ class hue_light():
 		self.name = name
 		self.hue_id = str(hue_id)
 		parent.hue_lights[self.hue_id] = self
+		self.saved_state = None
 		self.parent = parent
 		self.hue_state_file_path = self.parent.config['hue_light_states_path'] + self.hue_id + '.json'
 		self.hue_state = None
@@ -104,6 +105,31 @@ class hue_light():
 		self.modes = ['bri', 'ct', 'hue', 'sat']
 		self.last_mode = -1
 
+	def flash_high(self):
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		high = 254
+		new_mode = self.modes[(self.last_mode + 1)%len(self.modes)]
+		if new_mode == 'hue': high = 35000
+		high_payload = {new_mode: high}
+		put(url, data = json.dumps(high_payload))
+
+		return 1
+
+	def flash_low(self):
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		new_mode = self.modes[(self.last_mode + 1)%len(self.modes)]
+		low_payload = {new_mode: 1}
+		put(url, data = json.dumps(low_payload))
+
+		return 1
+
+	def set_new_state(self, new_payload):
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		put(url, data = json.dumps(new_payload))
+
+		return 1
+
+
 	def cycle_default(self):
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
 		self.last_bri_default = (self.last_bri_default + 1)%len(self.bri_defaults)
@@ -113,24 +139,8 @@ class hue_light():
 		return 1
 
 	def cycle_mode(self):
-		return 1
-		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
 		self.last_mode = (self.last_mode + 1)%len(self.modes)
 		new_mode = self.modes[self.last_mode]
-		current_state = int(self.get_state()['state'][new_mode])
-		high = 254
-		if new_mode == 'hue': high = 35000
-		high_payload = {new_mode: high}
-		low_payload = {new_mode: 1}
-		current_payload = {new_mode: current_state}
-
-		put(url, data = json.dumps(high_payload))
-		sleep(1)
-		put(url, data = json.dumps(low_payload))
-		sleep(1)
-		put(url, data = json.dumps(current_payload))
-
-		print('Setting mode to ' + new_mode)
 		return 1
 
 	def turn_on(self):
@@ -387,9 +397,29 @@ class group:
 
 	def cycle_mode(self):
 		for hue_light in self.hue_lights: 
-			print(hue_light.name)
+			hue_light.saved_state = hue_light.get_state()
+			sleep(0.1)
+		for hue_light in self.hue_lights: 
+			hue_light.flash_high()
+		sleep(1)
+
+		for hue_light in self.hue_lights:
+			hue_light.flash_low()
+		sleep(1)
+		
+		for hue_light in self.hue_lights:
+			state = hue_light.saved_state['state']
+			new_payload = {
+				'on': state['on'], 
+				'bri': state['bri'], 
+				state['colormode']: state[state['colormode']]
+				}
+			hue_light.set_new_state(new_payload)
+		for hue_light in self.hue_lights: 
 			hue_light.cycle_mode()
+		
 		return 1
+
 
 	def cycle_default(self):
 		for hue_light in self.hue_lights: 
