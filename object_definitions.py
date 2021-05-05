@@ -95,10 +95,15 @@ house.schedule_event("18:00:00",tv_lamp.turn_on)
 house.schedule_event("01:00:00",tv_lamp.turn_off)
 
 
+#########################################################################
+#
+#	Debug stuff
+#
+#########################################################################
 
-new_payload = {"ON":True, "bri": 150, "ct": 200}
-fireplace_left.set_new_state(new_payload)
-fireplace_right.set_new_state(new_payload)
-fireplace.state = "ON"
-fireplace.cycle_mode()
-pdb.set_trace()
+# new_payload = {"ON":True, "bri": 150, "ct": 200}
+# fireplace_left.set_new_state(new_payload)
+# fireplace_right.set_new_state(new_payload)
+# fireplace.state = "ON"
+# fireplace.cycle_mode()
+# pdb.set_trace()
