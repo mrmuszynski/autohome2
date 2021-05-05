@@ -94,6 +94,44 @@ class hue_light():
 		self.parent = parent
 		self.hue_state_file_path = self.parent.config['hue_light_states_path'] + self.hue_id + '.json'
 		self.hue_state = None
+		self.last_bri_default = -1
+		self.bri_defaults = [
+			(None, {'bri':100}),
+			(None, {'bri':150}),
+			(None, {'bri':200}),
+			(None, {'bri':250})
+		]
+		self.modes = ['bri', 'ct', 'hue', 'sat']
+		self.last_mode = -1
+
+	def cycle_default(self):
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		self.last_bri_default = (self.last_bri_default + 1)%len(self.bri_defaults)
+		payload = self.bri_defaults[self.last_bri_default][1]
+		print(payload)
+		put(url, data = json.dumps(payload))
+		return 1
+
+	def cycle_mode(self):
+		return 1
+		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
+		self.last_mode = (self.last_mode + 1)%len(self.modes)
+		new_mode = self.modes[self.last_mode]
+		current_state = int(self.get_state()['state'][new_mode])
+		high = 254
+		if new_mode == 'hue': high = 35000
+		high_payload = {new_mode: high}
+		low_payload = {new_mode: 1}
+		current_payload = {new_mode: current_state}
+
+		put(url, data = json.dumps(high_payload))
+		sleep(1)
+		put(url, data = json.dumps(low_payload))
+		sleep(1)
+		put(url, data = json.dumps(current_payload))
+
+		print('Setting mode to ' + new_mode)
+		return 1
 
 	def turn_on(self):
 		print("Turning on " + self.name)
@@ -119,7 +157,7 @@ class hue_light():
 		print("Turning up " + self.name)
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
 		payload = {
-			"bri_inc": 25,
+			"bri_inc": 50,
 			"transitiontime": 15,
 			}
 		# if hue is not None: payload['hue'] = hue
@@ -140,6 +178,17 @@ class hue_light():
 		# if sat is not None: payload['sat'] = sat
 		put(url, data = json.dumps(payload))
 		return 1
+
+	def get_state(self):
+		state_file = open(self.parent.config['hue_light_states_path'] + self.hue_id + '.json')
+		while 1:
+			try:
+				state = json.load(state_file)
+				break
+			except:
+				pass
+		
+		return state
 
 class hue_switch():
 	def __init__(self, parent, hue_id, group):
@@ -259,7 +308,8 @@ class hue_switch():
 
 
 class group:
-	def __init__(self, hue_lights, subgroups, name):
+	def __init__(self, hue_lights, subgroups, name, dimmer_control):
+		self.dimmer_control = dimmer_control
 		self.hue_lights = hue_lights
 		self.subgroups = subgroups
 		self.name = name
@@ -267,9 +317,9 @@ class group:
 		self.next_subgroup = 0
 		self.actions = {
 			'ON': {
-				'on.short': self.do_nothing,
+				'on.short': self.cycle_default,
 				'on.hold': self.do_nothing,
-				'on.release': self.do_nothing,
+				'on.release': self.cycle_mode,
 				'up.short': self.turn_up,
 				'up.hold': self.turn_up,
 				'up.release': self.do_nothing,
@@ -331,8 +381,20 @@ class group:
 		self.next_subgroup = self.next_subgroup%len(self.subgroups)
 
 		# print('State was ' + self.state)
-		# self.state = 'ON'
+		if self.dimmer_control: self.state = 'ON'
 		# print('State is ' + self.state)
+		return 1
+
+	def cycle_mode(self):
+		for hue_light in self.hue_lights: 
+			print(hue_light.name)
+			hue_light.cycle_mode()
+		return 1
+
+	def cycle_default(self):
+		for hue_light in self.hue_lights: 
+			print(hue_light.name)
+			hue_light.cycle_default()
 		return 1
 
 	def turn_off(self):
@@ -341,7 +403,7 @@ class group:
 			print(hue_light.name)
 			hue_light.turn_off()
 		# print('State was ' + self.state)
-		# self.state = 'OFF'
+		self.state = 'OFF'
 		# print('State is ' + self.state)
 		return 1
 
