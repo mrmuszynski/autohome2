@@ -1,3 +1,8 @@
+#project-specific stuff
+states
+schedules
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
