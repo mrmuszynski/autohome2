@@ -19,6 +19,8 @@ class house:
 		self.config = json.load(open("config.json"))
 		self.hue_sensors = {}
 		self.hue_lights = {}
+		self.decora_dimmers = {}
+		self.kasa_outlets = {}
 		self.groups = {}
 		self.session = Session()
 		self.adapter = adapters.HTTPAdapter(
@@ -26,6 +28,16 @@ class house:
 		    pool_maxsize=100)
 		self.session.mount('http://', self.adapter)
 		self.schedule = []
+
+	def goodnight(self):
+		for light_id in self.hue_lights:
+			self.hue_lights[light_id].turn_off()
+		for dimmer_id in self.decora_dimmers:
+			self.decora_dimmers[dimmer_id].turn_off()
+		for outlet_id in self.kasa_outlets:
+			self.kasa_outlets[outlet_id].turn_off()
+
+
 
 	def read_button_events(self):
 		for x in self.hue_sensors:
@@ -73,12 +85,14 @@ class kasa_strip:
 		self.ip = ip
 		self.name = name
 		self.strip = kasa.SmartStrip(ip)
+
 		asyncio.run(self.strip.update())
 
 class kasa_strip_outlet:
 	def __init__(self, parent, name, parent_strip, id_within_strip):
 		self.parent_strip = parent_strip
 		self.id_within_strip = id_within_strip
+		parent.kasa_outlets[parent_strip.ip+'.'+str(id_within_strip)] = self
 
 	def turn_on(self):
 		asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_on())
@@ -152,7 +166,7 @@ class decora_session:
 class decora_dimmer:
 	def __init__(self, parent, name, session, ip):
 		self.switch = session.switches[ip]
-
+		parent.decora_dimmers[ip] = self
 
 	def turn_on(self, brightness=20):
 		self.switch.update_attributes({'power': 'ON', 'brightness': brightness})
