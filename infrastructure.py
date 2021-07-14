@@ -7,6 +7,8 @@ from glob import glob
 from os import remove
 import asyncio
 import kasa
+import decora_wifi
+from decora_wifi.models import residential_account
 
 def get_unix_time():
 	return (datetime.now() - datetime.fromtimestamp(0)).total_seconds()
@@ -74,7 +76,7 @@ class kasa_strip:
 		asyncio.run(self.strip.update())
 
 class kasa_strip_outlet:
-	def __init__(self, parent_strip, id_within_strip):
+	def __init__(self, parent, name, parent_strip, id_within_strip):
 		self.parent_strip = parent_strip
 		self.id_within_strip = id_within_strip
 
@@ -86,6 +88,116 @@ class kasa_strip_outlet:
 		asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_off())
 		return 1
 
+	def flash_high(self):
+		self.turn_on()
+		return 1
+
+	def flash_low(self):
+		self.turn_off()
+		return 1
+
+	def set_new_state(self, new_payload):
+		if new_payload == ON: 
+			self.turn_on()
+		else:
+			seld.turn_off()
+		return 1
+
+	def turn_up(self):
+		return 1
+
+	def turn_down(self):
+		return 1
+
+	def cycle_default(self):
+		return 1
+
+	def cycle_mode(self):
+		return 1
+
+	def get_state(self):
+		if self.parent_strip.strip.children[self.id_within_strip].is_on:
+			return "ON"
+		else:
+			return "OFF"
+
+
+class decora_session:
+	def __init__(self, decora_email, decora_pass):
+		self.session = decora_wifi.DecoraWiFiSession()
+		self.session.login(decora_email, decora_pass)
+		switch_list = []
+
+		perms = self.session.user.get_residential_permissions()
+		for permission in perms:
+			acct = residential_account.ResidentialAccount(self.session, permission.residentialAccountId)
+			residences = acct.get_residences()
+
+		for residence in residences:
+			switch_list += residence.get_iot_switches()
+		
+		self.switches = dict((x.data['localIP'], x) for x in switch_list)
+
+	# flash_high
+	# flash_low
+	# set_new_state
+	# cycle_default
+	# cycle_mode
+	# turn_on
+	# turn_off
+	# turn_up
+	# turn_down
+	# get_state
+
+class decora_dimmer:
+	def __init__(self, parent, name, session, ip):
+		self.switch = session.switches[ip]
+
+
+	def turn_on(self, brightness=20):
+		self.switch.update_attributes({'power': 'ON', 'brightness': brightness})
+		return 1
+
+	def turn_off(self):
+		self.switch.update_attributes({'power': 'OFF'})
+		return 1
+
+	def flash_high(self, brightness=35):
+		turn_on(self, brightness=brightness)
+		return 1
+
+	def flash_low(self, brightness=10):
+		turn_on(self, brightness=brightness)
+		return 1
+
+	def set_new_state(self, new_payload):
+		if new_payload['on']: 
+			if 'brightness' in new_payload:
+				self.turn_on(brightness = new_payload['brightness'])
+			else:
+				self.turn_on()
+		else:
+			seld.turn_off()
+		return 1
+
+	def turn_up(self):
+		return 1
+
+	def turn_down(self):
+		return 1
+
+	def cycle_default(self):
+		return 1
+
+	def cycle_mode(self):
+		return 1
+
+	def get_state(self):
+		if self.parent_strip.strip.children[self.id_within_strip].is_on:
+			return "ON"
+		else:
+			return "OFF"
+
 class hue_light():
 	def __init__(self, parent, hue_id, name):
 		self.name = name
@@ -95,17 +207,41 @@ class hue_light():
 		self.parent = parent
 		self.hue_state_file_path = self.parent.config['hue_light_states_path'] + self.hue_id + '.json'
 		self.hue_state = None
-		self.last_bri_default = -1
-		self.bri_defaults = [
-			(None, {'bri':100}),
-			(None, {'bri':150}),
-			(None, {'bri':200}),
-			(None, {'bri':250})
-		]
+		self.last_default = -1
+		self.mode_lock = False
+		self.defaults = {
+			'bri': [
+				(None, {'bri':100}),
+				(None, {'bri':150}),
+				(None, {'bri':200}),
+				(None, {'bri':250})
+			],
+			'ct': [
+				(None, {'ct':100}),
+				(None, {'ct':150}),
+				(None, {'ct':200}),
+				(None, {'ct':250})
+			],
+			'sat': [
+				(None, {'sat':100}),
+				(None, {'sat':150}),
+				(None, {'sat':200}),
+				(None, {'sat':250})
+			],
+			'hue': [
+				(None, {'hue':0}),
+				(None, {'hue':10000}),
+				(None, {'hue':20000}),
+				(None, {'hue':30000}),
+				(None, {'hue':40000}),
+				(None, {'hue':50000})
+			],
+		}
 		self.modes = ['bri', 'ct', 'hue', 'sat']
 		self.last_mode = -1
 
 	def flash_high(self):
+		if self.mode_lock: return 1
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
 		high = 254
 		new_mode = self.modes[(self.last_mode + 1)%len(self.modes)]
@@ -116,6 +252,7 @@ class hue_light():
 		return 1
 
 	def flash_low(self):
+		if self.mode_lock: return 1
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
 		new_mode = self.modes[(self.last_mode + 1)%len(self.modes)]
 		low_payload = {new_mode: 1}
@@ -132,21 +269,27 @@ class hue_light():
 
 	def cycle_default(self):
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
-		self.last_bri_default = (self.last_bri_default + 1)%len(self.bri_defaults)
-		payload = self.bri_defaults[self.last_bri_default][1]
+		self.last_default = (self.last_default + 1)%len(self.defaults)
+		payload = self.defaults[self.modes[self.last_mode]][self.last_default][1]
 		print(payload)
 		put(url, data = json.dumps(payload))
 		return 1
 
 	def cycle_mode(self):
+		if self.mode_lock: return 1
 		self.last_mode = (self.last_mode + 1)%len(self.modes)
 		new_mode = self.modes[self.last_mode]
+		mode_lock = True
+		print("New_mode is " + new_mode)
 		return 1
 
 	def turn_on(self):
 		print("Turning on " + self.name)
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
-		payload = {"on": True}
+		self.last_default = 0
+		self.last_mode = 0
+		payload = self.defaults[self.modes[self.last_mode]][0][1] #this defaults to a hard coded value. Make it a TOD coded value
+		payload["on"] = True
 		# if hue is not None: payload['hue'] = hue
 		# if bri is not None: payload['bri'] = bri
 		# if sat is not None: payload['sat'] = sat
@@ -315,6 +458,12 @@ class hue_switch():
 		else:
 			print('Oh fuck, your payload action failed!')
 
+class venstar_thermostat:
+	def __init__(self, name, session, ip):
+		self.name = name
+		self.session = session
+		selp.ip = ip
+
 
 
 class group:
@@ -328,8 +477,8 @@ class group:
 		self.actions = {
 			'ON': {
 				'on.short': self.cycle_default,
-				'on.hold': self.do_nothing,
-				'on.release': self.cycle_mode,
+				'on.hold': self.cycle_mode,
+				'on.release': self.unlock_mode,
 				'up.short': self.turn_up,
 				'up.hold': self.turn_up,
 				'up.release': self.do_nothing,
@@ -396,6 +545,7 @@ class group:
 		return 1
 
 	def cycle_mode(self):
+		if sum([x.mode_lock for x in self.hue_lights]): return 1
 		for hue_light in self.hue_lights: 
 			hue_light.saved_state = hue_light.get_state()
 			sleep(0.1)
@@ -409,17 +559,30 @@ class group:
 		
 		for hue_light in self.hue_lights:
 			state = hue_light.saved_state['state']
-			new_payload = {
-				'on': state['on'], 
-				'bri': state['bri'], 
-				state['colormode']: state[state['colormode']]
-				}
-			hue_light.set_new_state(new_payload)
+			if state['colormode'] == 'hs':
+				new_payload = {
+					'on': state['on'], 
+					'bri': state['bri'], 
+					'hue': state['hue'],
+					'hue': state['sat']
+					}
+
+			else:
+				new_payload = {
+					'on': state['on'], 
+					'bri': state['bri'], 
+					state['colormode']: state[state['colormode']]
+					}
+				hue_light.set_new_state(new_payload)
 		for hue_light in self.hue_lights: 
 			hue_light.cycle_mode()
 		
 		return 1
 
+	def unlock_mode(self):
+		for hue_light in self.hue_lights: 
+			hue_light.mode_lock = False
+		return 1
 
 	def cycle_default(self):
 		for hue_light in self.hue_lights: 
@@ -454,6 +617,37 @@ class group:
 		# print('State was ' + self.state)
 		# print('State is ' + self.state)
 		return 1
+
+
+# Required methods for items
+	# flash_high
+	# flash_low
+	# set_new_state
+	# cycle_default
+	# cycle_mode
+	# turn_on
+	# turn_off
+	# turn_up
+	# turn_down
+	# get_state
+
+#required args for item constructors
+	# parent
+	# name
+
+#requred attributes for items
+	# self.name = name
+	# self.hue_id = str(hue_id)
+	# parent.hue_lights[self.hue_id] = self
+	# self.saved_state = None
+	# self.parent = parent
+	# self.hue_state_file_path = self.parent.config['hue_light_states_path'] + self.hue_id + '.json'
+	# self.hue_state = None
+	# self.last_default = -1
+	# self.mode_lock = False
+	# self.defaults = {}
+	# self.modes = ['bri', 'ct', 'hue', 'sat']
+	# self.last_mode = -1
 
 #stuff to do
 	#default state per tod

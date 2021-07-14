@@ -48,11 +48,18 @@ bedroom_ceiling_2 = infrastructure.hue_light(house,15, 'Dining Room Ceiling 2')
 # amp_and_garland = infrastructure.kasa_strip_outlet(poang_strip, 2)
 
 grow_house_strip = infrastructure.kasa_strip("192.168.0.188", "Grow House")
-grow_0 = infrastructure.kasa_strip_outlet(grow_house_strip, 0)
-grow_1 = infrastructure.kasa_strip_outlet(grow_house_strip, 1)
+grow_0 = infrastructure.kasa_strip_outlet(house, 'Grow Light 1', grow_house_strip, 0)
+grow_1 = infrastructure.kasa_strip_outlet(house, 'Grow Light 2', grow_house_strip, 1)
 
 #single plug not implemented, but its IP is 192.168.0.192
 
+########################################################################
+#
+#	init Decora dimmers
+#
+########################################################################
+decora_session = infrastructure.decora_session("mrmuszynski@gmail.com", "ZB248dCdNYzQ!cZ4")
+garage_string = infrastructure.decora_dimmer(house, "Garage String Lights", decora_session, "192.168.0.198")
 
 #########################################################################
 #
@@ -106,4 +113,4 @@ house.schedule_event("01:00:00",tv_lamp.turn_off)
 # fireplace_right.set_new_state(new_payload)
 # fireplace.state = "ON"
 # fireplace.cycle_mode()
-# pdb.set_trace()
+pdb.set_trace()

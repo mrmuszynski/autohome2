@@ -75,7 +75,7 @@
 #include "FastLED.h"
 
 #define LED_PIN 6
-#define NUM_LEDS 29
+#define NUM_LEDS 10
 #define PATTERN_LEN 4
 #define BRIGHTNESS  64
 #define LED_TYPE    WS2812B
@@ -106,47 +106,32 @@ void presentation()
 
 void loop()
 {
-  for (int ii = 0; ii < NUM_LEDS; ii++) {
-    leds[ii] -= CRGB( 10, 10, 10);
-  }
-  
-  led_index = random(0,100);
-  while (led_index == last_index) {
-    led_index = random(0,100);
-  }
-
-  last_index = led_index;
-  if ( led_index <= 10) {
-    leds[led_index] = CRGB(100, 100, 100);
-  }
-  FastLED.show();
-  delay(100);
     
 }
 
 
-//void receive(const MyMessage &message)
-//{
-//  Serial.println( "I GOT A MESSAGE!" );
-//  Serial.println( message.type );
-//  String payload = String(message.data);
-//  String redString = payload.substring(0,2);
-//  String greenString = payload.substring(3,5);
-//  String blueString = payload.substring(6,8);
+void receive(const MyMessage &message)
+{
+  Serial.println( "I GOT A MESSAGE!" );
+  Serial.println( message.type );
+  String payload = String(message.data);
+  String redString = payload.substring(0,2);
+  String greenString = payload.substring(3,5);
+  String blueString = payload.substring(6,8);
 
-//  int red = redString.toInt();
-//  int green = greenString.toInt();
-//  int blue = blueString.toInt();
+  int red = redString.toInt();
+  int green = greenString.toInt();
+  int blue = blueString.toInt();
   
-//  Serial.println( payload );
+  Serial.println( payload );
   
-//  // scale the potentiometer values from 10-bit (0-1023) to 8-bit (0-255)
-//  Serial.println( "Setting color..." );
-//  for (int ii = 0; ii < NUM_LEDS; ii++) {
-//    leds[ii] = CRGB(red, green, blue);
-//  }
+  // scale the potentiometer values from 10-bit (0-1023) to 8-bit (0-255)
+  Serial.println( "Setting color..." );
+  for (int ii = 0; ii < NUM_LEDS; ii++) {
+    leds[ii] = CRGB(red, green, blue);
+  }
   
-//  FastLED.show(); // apply the function on led strip
+  FastLED.show(); // apply the function on led strip
 
   //delay(200);
   //Serial.println( "Setting color..." );
@@ -155,4 +140,4 @@ void loop()
   //}
   
   //FastLED.show(); // apply the function on led strip
-//}
+}
