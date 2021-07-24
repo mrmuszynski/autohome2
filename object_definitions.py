@@ -76,6 +76,17 @@ print("Initalizing Decora Dimmers")
 decora_session = infrastructure.decora_session("mrmuszynski@gmail.com", "ZB248dCdNYzQ!cZ4")
 garage_string = infrastructure.decora_dimmer(house, "Garage String Lights", decora_session, "192.168.0.198")
 
+########################################################################
+#
+#	init mysensors
+#
+########################################################################
+print("Initalizing MySensors")
+
+mySensorsGateway = infrastructure.mySensorsGateway(house)
+officeBookCaseLights = infrastructure.bookcaseLights(house, "Office Bookcase Lights", 2, 1)
+officeBookCaseLights.on()
+officeBookCaseLights.off()
 #########################################################################
 #
 #	init groups
@@ -131,4 +142,4 @@ house.schedule_event("01:00:00",house.goodnight)
 # fireplace_right.set_new_state(new_payload)
 # fireplace.state = "ON"
 # fireplace.cycle_mode()
-pdb.set_trace()
+# pdb.set_trace()

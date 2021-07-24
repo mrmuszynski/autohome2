@@ -15,7 +15,6 @@ last_light_req_text = ''
 
 sleep_time = 0.1
 while 1:
-	start_time = datetime.now()
 	try:
 		step_start = datetime.now()
 		req = session.get(config['hue_api_base_url']+"sensors")

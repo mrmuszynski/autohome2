@@ -1,3 +1,7 @@
 from object_definitions import house
 
-house.run_events()
+try:
+	house.mySensorsGateway.start()
+	house.run()
+except KeyboardInterrupt:
+	house.mySensorsGateway.stop()

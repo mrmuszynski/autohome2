@@ -4,5 +4,6 @@
 	"hue_api_base_url": "http://192.168.0.117/api/jbfKPiJCrktQuwfV7u7y7aTU2gUcbnppzHuZrWY8/",
 	"hue_light_states_path": "states/lights/",
 	"hue_sensor_states_path": "states/sensors/",
-	"button_payload_path": "payloads/buttons/"
+	"button_payload_path": "payloads/buttons/",
+	"mysensors_payload_path": "payloads/mysensors/"
 }

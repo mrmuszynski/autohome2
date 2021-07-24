@@ -9,6 +9,7 @@ import asyncio
 import kasa
 import decora_wifi
 from decora_wifi.models import residential_account
+from mysensors import mysensors
 
 def get_unix_time():
 	return (datetime.now() - datetime.fromtimestamp(0)).total_seconds()
@@ -19,10 +20,12 @@ class house:
 		self.config = json.load(open("config.json"))
 		self.hue_sensors = {}
 		self.hue_lights = {}
+		self.mysensors = {}
 		self.decora_dimmers = {}
 		self.kasa_outlets = {}
 		self.groups = {}
 		self.session = Session()
+		self.mySensorsGateway = None
 		self.adapter = adapters.HTTPAdapter(
 		    pool_connections=100,
 		    pool_maxsize=100)
@@ -36,8 +39,6 @@ class house:
 			self.decora_dimmers[dimmer_id].turn_off()
 		for outlet_id in self.kasa_outlets:
 			self.kasa_outlets[outlet_id].turn_off()
-
-
 
 	def read_button_events(self):
 		for x in self.hue_sensors:
@@ -54,8 +55,30 @@ class house:
 					pass
 			self.hue_sensors[payload_dict['button_id']].process_payload(payload_dict, button_payload_path)
 
+	def read_mySensors(self):
+		mysensors_payload_paths = glob(self.config['mysensors_payload_path']+'*')
+		for mysensors_payload_path in mysensors_payload_paths:
+			while 1:
+				try:
+					payload_dict = json.load(open(mysensors_payload_path))
+					break
+				except:
+					pass
+			print(payload_dict)
+			self.mySensorsGateway.set_child_value(
+				payload_dict["node_id"], 
+				payload_dict["sensor_id"], 
+				payload_dict["message_type"], 
+				payload_dict["payload"]
+				)
+			remove(mysensors_payload_path)
+			# self.hue_sensors[payload_dict['button_id']].process_payload(payload_dict, button_payload_path)
+
+
+
 	def read_payloads(self):
 		self.read_sensors()
+		self.read_mySensors()
 
 	def schedule_event(self, time, action):
 		YDOY = datetime.strftime(datetime.now(),"%Y-%jT")
@@ -68,17 +91,26 @@ class house:
 		self.schedule = sorted(self.schedule, key=lambda x: x[0])
 
 	def run_events(self):
+		now = datetime.now()
+		for scheduled_event in self.schedule:
+			execute_event = (scheduled_event[0] - datetime.now()).total_seconds() < 0
+			if execute_event:
+				scheduled_event[1]()
+				scheduled_event[0] += timedelta(days=1)
+				self.schedule = sorted(self.schedule, key=lambda x: x[0])
+				print('execute event')
+			else:
+				break
+
+	def run(self):
+		#remove stale payloads
+		#I don't think this is working right now, though :-/
+		for f in glob('payloads/buttons/*'): remove(f)
+		for f in glob('payloads/lights/*'): remove(f)
+
 		while 1:
-			now = datetime.now()
-			for scheduled_event in self.schedule:
-				execute_event = (scheduled_event[0] - datetime.now()).total_seconds() < 0
-				if execute_event:
-					scheduled_event[1]()
-					scheduled_event[0] += timedelta(days=1)
-					self.schedule = sorted(self.schedule, key=lambda x: x[0])
-					print('execute event')
-				else:
-					break
+			self.run_events()
+			self.read_payloads()
 
 class kasa_strip:
 	def __init__(self, ip, name):
@@ -356,6 +388,65 @@ class hue_light():
 				pass
 		
 		return state
+
+class mySensorsGateway():
+	def __init__(self, parent):
+		self.parent = parent
+		gateway = mysensors.SerialGateway(
+			'/dev/ttyUSB0', baud=115200, #timeout=1.0, reconnect_timeout=10.0,
+			event_callback=self.event, persistence=True,
+			persistence_file='mysensors.pickle', protocol_version='2.2')
+		gateway.start_persistence()
+		gateway.on_conn_made = self.conn_made
+		gateway.on_conn_lost = self.conn_lost
+		self.parent.mySensorsGateway = gateway
+
+	def conn_made(self, gateway):
+		"""React when the connection is made to the gateway device."""
+		print("Connection made with MySensors Gateway!")
+
+
+	def conn_lost(self, gateway, error):
+		"""React when the connection is lost to the gateway device."""
+		print("Connection lost with MySensors Gateway!")
+
+	def event(self, message):
+		print("Event Received From Sensor!")
+		print(message)
+
+class bookcaseLights():
+	def __init__(self, parent, name, mysensors_node_id, mysensors_sensor_id):
+		self.parent = parent
+		self.mysensors_node_id = mysensors_node_id
+		self.mysensors_sensor_id = mysensors_sensor_id
+		try:
+			self.parent.mysensors[mysensors_node_id][mysensors_sensor_id] = self
+		except KeyError:
+			self.parent.mysensors[mysensors_node_id] = {}
+			self.parent.mysensors[mysensors_node_id][mysensors_sensor_id] = self
+	def on(self):
+		timestamp = str(int(get_unix_time()*1e6))
+		json_data = {
+				"node_id": self.mysensors_node_id,
+				"sensor_id": self.mysensors_sensor_id,
+				"message_type": 17,
+				"payload": '225000100000'
+				}
+		json.dump(json_data, open(self.parent.config['mysensors_payload_path'] + timestamp,'w'))
+
+
+
+	def off(self):
+		timestamp = str(int(get_unix_time()*1e6))
+		json_data = {
+				"node_id": self.mysensors_node_id,
+				"sensor_id": self.mysensors_sensor_id,
+				"message_type": 17,
+				"payload": '225000000000'
+				}
+		json.dump(json_data, open(self.parent.config['mysensors_payload_path'] + timestamp,'w'))
+
+
 
 class hue_switch():
 	def __init__(self, parent, hue_id, group):
