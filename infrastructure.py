@@ -10,6 +10,7 @@ import kasa
 import decora_wifi
 from decora_wifi.models import residential_account
 from mysensors import mysensors
+import urllib
 
 def get_unix_time():
 	return (datetime.now() - datetime.fromtimestamp(0)).total_seconds()
@@ -26,6 +27,7 @@ class house:
 		self.groups = {}
 		self.session = Session()
 		self.mySensorsGateway = None
+		self.thermostat = None
 		self.adapter = adapters.HTTPAdapter(
 		    pool_connections=100,
 		    pool_maxsize=100)
@@ -43,6 +45,19 @@ class house:
 	def read_button_events(self):
 		for x in self.hue_sensors:
 			self.hue_sensors[x].read_button_events()
+
+	def read_thermostat(self):
+		thermostat_payload_paths = glob(self.config['thermostat_payload_path']+'*')
+		for thermostat_payload_path in thermostat_payload_paths:
+			print(thermostat_payload_path)
+			while 1:
+				try:
+					payload_dict = json.load(open(thermostat_payload_path))
+					break
+				except:				
+					pass
+			self.thermostat.process_payload(payload_dict, thermostat_payload_path)
+			remove(thermostat_payload_path)
 
 	def read_sensors(self):
 		button_payload_paths = glob(self.config['button_payload_path']+'*')
@@ -79,6 +94,7 @@ class house:
 	def read_payloads(self):
 		self.read_sensors()
 		self.read_mySensors()
+		self.read_thermostat()
 
 	def schedule_event(self, time, action):
 		YDOY = datetime.strftime(datetime.now(),"%Y-%jT")
@@ -419,34 +435,33 @@ class bookcaseLights():
 		self.parent = parent
 		self.mysensors_node_id = mysensors_node_id
 		self.mysensors_sensor_id = mysensors_sensor_id
+
 		try:
 			self.parent.mysensors[mysensors_node_id][mysensors_sensor_id] = self
 		except KeyError:
 			self.parent.mysensors[mysensors_node_id] = {}
 			self.parent.mysensors[mysensors_node_id][mysensors_sensor_id] = self
-	def on(self):
+	def send_command(self, command):
 		timestamp = str(int(get_unix_time()*1e6))
 		json_data = {
 				"node_id": self.mysensors_node_id,
 				"sensor_id": self.mysensors_sensor_id,
 				"message_type": 17,
-				"payload": '225000100000'
+				"payload": command
 				}
 		json.dump(json_data, open(self.parent.config['mysensors_payload_path'] + timestamp,'w'))
+
+	def on(self):
+		self.send_command('225000100000')
 
 
 
 	def off(self):
-		timestamp = str(int(get_unix_time()*1e6))
-		json_data = {
-				"node_id": self.mysensors_node_id,
-				"sensor_id": self.mysensors_sensor_id,
-				"message_type": 17,
-				"payload": '225000000000'
-				}
-		json.dump(json_data, open(self.parent.config['mysensors_payload_path'] + timestamp,'w'))
+		self.send_command('225000000000')
 
-
+	def wipe(self):
+		self.send_command('225000000001')
+		self.send_command('225255255003')
 
 class hue_switch():
 	def __init__(self, parent, hue_id, group):
@@ -564,12 +579,15 @@ class hue_switch():
 			print('Oh fuck, your payload action failed!')
 
 class venstar_thermostat:
-	def __init__(self, name, session, ip):
+	def __init__(self, parent, name, ip):
 		self.name = name
-		self.session = session
-		selp.ip = ip
+		self.ip = ip
+		self.base_url = "http://" + self.ip + "/"
+		self.parent = parent
+		self.parent.thermostat = self
 
-
+	def process_payload(self, payload_dict, thermostat_payload_path):
+		req = self.parent.session.post(self.base_url + 'control', data = urllib.parse.urlencode(payload_dict))
 
 class group:
 	def __init__(self, hue_lights, subgroups, name, dimmer_control):

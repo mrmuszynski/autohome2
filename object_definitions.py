@@ -84,9 +84,17 @@ garage_string = infrastructure.decora_dimmer(house, "Garage String Lights", deco
 print("Initalizing MySensors")
 
 mySensorsGateway = infrastructure.mySensorsGateway(house)
-officeBookCaseLights = infrastructure.bookcaseLights(house, "Office Bookcase Lights", 2, 1)
-officeBookCaseLights.on()
-officeBookCaseLights.off()
+bookcaseLights = infrastructure.bookcaseLights(house, "Office Bookcase Lights", 2, 1)
+
+########################################################################
+#
+#	init Venstar Thermostat
+#
+########################################################################
+print("Initalizing Venstar Thermostat")
+
+thermostat = infrastructure.venstar_thermostat(house, "Thermostat", "192.168.0.159")
+
 #########################################################################
 #
 #	init groups
@@ -101,6 +109,7 @@ stove = infrastructure.group([kitchen_cabinets_left, kitchen_cabinets_right, sto
 #	init Hue switches and dimmers
 #
 #########################################################################
+print("Initalizing Hue Switches and Dimmers")
 fireplace_dimmer = infrastructure.hue_switch(house,32, fireplace)
 stove_button = infrastructure.hue_switch(house,6, stove)
 # bathroom_dimmer = infrastructure.hue_switch(house,35, None)
