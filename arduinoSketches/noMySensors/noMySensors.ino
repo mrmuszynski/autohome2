@@ -2,10 +2,10 @@
 #include "FastLED.h"
 
 #define LED_PIN 6
-#define NUM_LEDS 22
+#define NUM_LEDS 30
 
 //#define PATTERN_LEN 4
-#define BRIGHTNESS  70
+#define BRIGHTNESS  80
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
 CRGB leds[NUM_LEDS];
@@ -80,12 +80,13 @@ void simple_chase() {
     change_brightness_by_percent( 0.9 );
     leds[ii] = CRGB(200,200,200);
     FastLED.show();
-    delay(25);
+    delay(100);
   }
 }
 void loop()
 {
   Serial.println("starting loop...");
+  //simple_chase();
   set_by_hsv(33, 50, 255);
   delay(3000);
   set_by_hsv(33, 100, 255);

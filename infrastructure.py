@@ -61,7 +61,7 @@ class house:
 			for scheduled_event in self.schedule:
 				execute_event = (scheduled_event[0] - datetime.now()).total_seconds() < 0
 				if execute_event:
-					scheduled_event[1]()
+					scheduled_event[1](payload=scheduled_event[2])
 					scheduled_event[0] += timedelta(days=1)
 					self.schedule = sorted(self.schedule, key=lambda x: x[0])
 					print('execute event')
@@ -80,7 +80,7 @@ class kasa_strip_outlet:
 		self.parent_strip = parent_strip
 		self.id_within_strip = id_within_strip
 
-	def turn_on(self):
+	def turn_on(self, payload=None):
 		asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_on())
 		return 1
 
@@ -154,7 +154,7 @@ class decora_dimmer:
 		self.switch = session.switches[ip]
 
 
-	def turn_on(self, brightness=20):
+	def turn_on(self, brightness=20, payload=None):
 		self.switch.update_attributes({'power': 'ON', 'brightness': brightness})
 		return 1
 
@@ -283,13 +283,17 @@ class hue_light():
 		print("New_mode is " + new_mode)
 		return 1
 
-	def turn_on(self):
+	def turn_on(self, payload=None):
 		print("Turning on " + self.name)
 		url =  self.parent.config['hue_api_base_url'] + 'lights/' + str(self.hue_id) + '/state'
-		self.last_default = 0
-		self.last_mode = 0
-		payload = self.defaults[self.modes[self.last_mode]][0][1] #this defaults to a hard coded value. Make it a TOD coded value
-		payload["on"] = True
+
+		if payload is None:
+			self.last_default = 0
+			self.last_mode = 0
+			payload = self.defaults[self.modes[self.last_mode]][0][1] #this defaults to a hard coded value. Make it a TOD coded value
+			payload["on"] = True
+		else:
+			payload["on"] = True
 		# if hue is not None: payload['hue'] = hue
 		# if bri is not None: payload['bri'] = bri
 		# if sat is not None: payload['sat'] = sat
