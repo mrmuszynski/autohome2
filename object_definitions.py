@@ -37,6 +37,11 @@ laundry_light = infrastructure.hue_light(house,13, 'Laundry')
 dining_room_ceiling_1 = infrastructure.hue_light(house,14, 'Dining Room Ceiling 1')
 dining_room_ceiling_2 = infrastructure.hue_light(house,15, 'Dining Room Ceiling 2')
 bedroom_ceiling_2 = infrastructure.hue_light(house,15, 'Dining Room Ceiling 2')
+wall_lamp = infrastructure.hue_light(house,22, 'TV Room Wall')
+kitchen_sink = infrastructure.hue_light(house,24, 'Kitchen Sink')
+hallway = infrastructure.hue_light(house,23, 'Hallway')
+tv_room_fan_1 = infrastructure.hue_light(house,18, 'Craftsman Fan 1')
+tv_room_fan_2 = infrastructure.hue_light(house,19, 'Craftsman Fan 2')
 
 ########################################################################
 #
@@ -135,9 +140,109 @@ print("Initalizing Schedule")
 #house.schedule_event("06:00:00",grow_1.turn_on)
 #house.schedule_event("20:00:00",grow_0.turn_off)
 #house.schedule_event("20:00:00",grow_1.turn_off)
-house.schedule_event("18:00:00",tv_lamp.turn_on)
-house.schedule_event("18:00:00",garland.turn_on)
-house.schedule_event("01:00:00",house.goodnight)
+
+#######################################################################################
+#
+#	EVENING TURN ON EVENTS
+#
+#######################################################################################
+
+#TV Room
+house.schedule_event("17:36:00",tv_lamp.turn_on,  {"bri": 177, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",wall_lamp.turn_on,  {"bri": 177, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",tv_room_fan_1.turn_on,  {"bri": 177, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",tv_room_fan_2.turn_on,  {"bri": 177, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+#glass lamp
+
+#living room
+house.schedule_event("17:36:00",fireplace_left.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",fireplace_right.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+
+#dining room
+house.schedule_event("17:36:00",dining_room_ceiling_1.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",dining_room_ceiling_2.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+
+#kitchen
+house.schedule_event("17:36:00",kitchen_cabinets_left.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",kitchen_cabinets_right.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",stove_1.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",stove_2.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("17:36:00",kitchen_sink.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+
+#misc
+house.schedule_event("17:36:00",hallway.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*60*10})
+house.schedule_event("18:00:00",garland.turn_on, {})
+
+#######################################################################################
+#
+#	EVENING BRIGHTENING EVENTS
+#
+#######################################################################################
+
+#TV Room
+house.schedule_event("18:00:00",tv_lamp.turn_on,  {"bri": 222, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",wall_lamp.turn_on,  {"bri": 222, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",tv_room_fan_1.turn_on,  {"bri": 222, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",tv_room_fan_2.turn_on,  {"bri": 222, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+#glass lamp
+
+#living room
+house.schedule_event("18:00:00",fireplace_left.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",fireplace_right.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+
+#dining room
+house.schedule_event("18:00:00",dining_room_ceiling_1.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",dining_room_ceiling_2.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+
+#kitchen
+house.schedule_event("18:00:00",kitchen_cabinets_left.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",kitchen_cabinets_right.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",stove_1.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",stove_2.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+house.schedule_event("18:00:00",kitchen_sink.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+
+#misc
+house.schedule_event("18:00:00",hallway.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+
+#######################################################################################
+#
+#	EVENING DIMMING EVENTS
+#
+#######################################################################################
+
+#TV Room
+house.schedule_event("22:00:00",tv_lamp.turn_on,  {"bri": 100, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",wall_lamp.turn_on,  {"bri": 100, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",tv_room_fan_1.turn_on,  {"bri": 100, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",tv_room_fan_2.turn_on,  {"bri": 100, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+#glass lamp
+
+#living room
+house.schedule_event("22:00:00",fireplace_left.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",fireplace_right.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+
+#dining room
+house.schedule_event("22:00:00",dining_room_ceiling_1.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",dining_room_ceiling_2.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+
+#kitchen
+house.schedule_event("22:00:00",kitchen_cabinets_left.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",kitchen_cabinets_right.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",stove_1.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",stove_2.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+house.schedule_event("22:00:00",kitchen_sink.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+
+#misc
+house.schedule_event("22:00:00",hallway.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*60*10})
+
+#######################################################################################
+#
+#	EVENING TURN OFF EVENTS
+#
+#######################################################################################
+
+#turn off
+house.schedule_event("01:00:00",house.goodnight, {})
 
 
 #########################################################################
@@ -145,6 +250,20 @@ house.schedule_event("01:00:00",house.goodnight)
 #	Debug stuff
 #
 #########################################################################
+
+
+house.schedule_event("09:45:00",fireplace_left.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*10})
+house.schedule_event("09:45:00",fireplace_right.turn_on, {"bri": 77, "hue": 8401, "sat": 140, "transitiontime": 30*10})
+
+house.schedule_event("09:45:30",fireplace_left.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*10})
+house.schedule_event("09:45:30",fireplace_right.turn_on, {"bri": 185, "hue": 8401, "sat": 140, "transitiontime": 120*10})
+
+house.schedule_event("09:47:00",fireplace_left.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*10})
+house.schedule_event("09:47:00",fireplace_right.turn_on, {"bri": 75, "hue": 8401, "sat": 140, "transitiontime": 180*10})
+
+# house.schedule_event("15:27:04",tv_lamp.turn_off, {})
+# house.schedule_event("15:27:06",tv_lamp.turn_on,  {"bri": 222, "hue": 8401, "sat": 140, "transitiontime": 120*60*10})
+# house.schedule_event("15:27:08",tv_lamp.turn_off, {})
 
 # new_payload = {"ON":True, "bri": 150, "ct": 200}
 # fireplace_left.set_new_state(new_payload)

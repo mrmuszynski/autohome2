@@ -39,7 +39,7 @@ while 1:
 		
 		sleep_time = 0.1
 
-	except requests.exceptions.ChunkedEncodingError:
+	except (requests.exceptions.ChunkedEncodingError, requests.exceptions.ConnectionError):
 		sleep_time *= 2
 	sleep(sleep_time)
 

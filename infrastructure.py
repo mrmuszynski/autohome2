@@ -9,6 +9,7 @@ import asyncio
 import kasa
 import decora_wifi
 from decora_wifi.models import residential_account
+from kasa.exceptions import SmartDeviceException
 from mysensors import mysensors
 import urllib
 
@@ -26,6 +27,7 @@ class house:
 		self.kasa_outlets = {}
 		self.groups = {}
 		self.session = Session()
+		self.current_event_parameters = {}
 		self.mySensorsGateway = None
 		self.thermostat = None
 		self.adapter = adapters.HTTPAdapter(
@@ -96,14 +98,14 @@ class house:
 		self.read_mySensors()
 		self.read_thermostat()
 
-	def schedule_event(self, time, action):
+	def schedule_event(self, time, action, parameters):
 		YDOY = datetime.strftime(datetime.now(),"%Y-%jT")
 		YDOY_time = YDOY + time
 		YDOY_datetime = datetime.strptime(YDOY_time, "%Y-%jT%H:%M:%S")
 		time_is_in_past = (YDOY_datetime - datetime.now()).total_seconds() < 0
 		if time_is_in_past:
 			YDOY_datetime += timedelta(days=1)
-		self.schedule.append([YDOY_datetime, action])
+		self.schedule.append([YDOY_datetime, action, parameters])
 		self.schedule = sorted(self.schedule, key=lambda x: x[0])
 
 	def run_events(self):
@@ -111,7 +113,9 @@ class house:
 		for scheduled_event in self.schedule:
 			execute_event = (scheduled_event[0] - datetime.now()).total_seconds() < 0
 			if execute_event:
+				self.current_event_parameters = scheduled_event[2]
 				scheduled_event[1]()
+				self.current_event_parameters = {}
 				scheduled_event[0] += timedelta(days=1)
 				self.schedule = sorted(self.schedule, key=lambda x: x[0])
 				print('execute event')
@@ -143,12 +147,18 @@ class kasa_strip_outlet:
 		parent.kasa_outlets[parent_strip.ip+'.'+str(id_within_strip)] = self
 
 	def turn_on(self):
-		asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_on())
-		return 1
+		try:
+			asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_on())
+			return 1
+		except SmartDeviceException:
+			return 0
 
 	def turn_off(self):
-		asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_off())
-		return 1
+		try:
+			asyncio.run(self.parent_strip.strip.children[self.id_within_strip].turn_off())
+			return 1
+		except SmartDeviceException:
+			return 0
 
 	def flash_high(self):
 		self.turn_on()
@@ -217,6 +227,8 @@ class decora_dimmer:
 		parent.decora_dimmers[ip] = self
 
 	def turn_on(self, brightness=20):
+		#1 parameter:
+		#	brightness
 		self.switch.update_attributes({'power': 'ON', 'brightness': brightness})
 		return 1
 
@@ -352,9 +364,11 @@ class hue_light():
 		self.last_mode = 0
 		payload = self.defaults[self.modes[self.last_mode]][0][1] #this defaults to a hard coded value. Make it a TOD coded value
 		payload["on"] = True
-		# if hue is not None: payload['hue'] = hue
-		# if bri is not None: payload['bri'] = bri
-		# if sat is not None: payload['sat'] = sat
+
+		if 'hue' in self.parent.current_event_parameters: payload['hue'] = self.parent.current_event_parameters['hue']
+		if 'bri' in self.parent.current_event_parameters: payload['bri'] = self.parent.current_event_parameters['bri']
+		if 'sat' in self.parent.current_event_parameters: payload['sat'] = self.parent.current_event_parameters['sat']
+		if 'transitiontime' in self.parent.current_event_parameters: payload['transitiontime'] = self.parent.current_event_parameters['transitiontime']
 		put(url, data = json.dumps(payload))
 		return 1
 
@@ -600,7 +614,7 @@ class group:
 		self.actions = {
 			'ON': {
 				'on.short': self.cycle_default,
-				'on.hold': self.cycle_mode,
+				'on.hold': self.cycle_default,
 				'on.release': self.unlock_mode,
 				'up.short': self.turn_up,
 				'up.hold': self.turn_up,
